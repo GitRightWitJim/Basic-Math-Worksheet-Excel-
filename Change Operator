@@ -1,0 +1,141 @@
+' ============================================================
+'  Math Worksheet: Operator Switcher + Answer Key Updater
+'
+'  OPERATOR CELLS:
+'    60 columns (12 groups of 5, starting AT, step +4 within
+'    group, +6 gap between groups, ending KR)
+'    Rows: 4, 8, 12, 16, 20, 24, 28, 32
+'
+'  ANSWER KEY CELLS:
+'    Columns: LU, LW, LZ, MB, ME, MG, MJ, ML, MQ, MS, MV,
+'             MX, NA, NC, NF, NH, NL, NN, NQ, NS, NW, NX,
+'             OA, OC
+'    Rows: 13-32
+'    Formula pattern: =CELL1 [op] CELL2  e.g. =AV3*AV4
+' ============================================================
+
+Private Sub ApplyOperator(sym As String)
+
+    Dim ws          As Worksheet
+    Dim opCols      As Variant
+    Dim opRows      As Variant
+    Dim akCols      As Variant
+    Dim i           As Long
+    Dim j           As Long
+    Dim cell        As Range
+    Dim formula     As String
+    Dim parts       As Variant
+
+    Set ws = ActiveSheet  ' Change to Sheets("YourSheetName") if needed
+
+    ' --- PART 1: Operator symbol cells ---
+    opCols = Array( _
+        "AT", "AX", "BB", "BF", "BJ", _
+        "BP", "BT", "BX", "CB", "CF", _
+        "CL", "CP", "CT", "CX", "DB", _
+        "DH", "DL", "DP", "DT", "DX", _
+        "ED", "EH", "EL", "EP", "ET", _
+        "EZ", "FD", "FH", "FL", "FP", _
+        "FV", "FZ", "GD", "GH", "GL", _
+        "GR", "GV", "GZ", "HD", "HH", _
+        "HN", "HR", "HV", "HZ", "ID", _
+        "IJ", "IN", "IR", "IV", "IZ", _
+        "JF", "JJ", "JN", "JR", "JV", _
+        "KB", "KF", "KJ", "KN", "KR")
+
+    opRows = Array(4, 8, 12, 16, 20, 24, 28, 32)
+
+    Application.ScreenUpdating = False
+
+    For i = LBound(opCols) To UBound(opCols)
+        For j = LBound(opRows) To UBound(opRows)
+            ws.Range(opCols(i) & opRows(j)).Value = sym
+        Next j
+    Next i
+
+    ' --- PART 2: Answer key formula cells ---
+    ' For display symbol (x or ÷), the actual formula operator
+    ' must be * or / so Excel can calculate it
+    Dim formulaOp As String
+    Select Case sym
+        Case "+": formulaOp = "+"
+        Case "-": formulaOp = "-"
+        Case "*": formulaOp = "*"
+        Case "/": formulaOp = "/"
+        Case "x": formulaOp = "*"
+        Case Chr(215): formulaOp = "*"    ' × display -> * in formula
+        Case Chr(247): formulaOp = "/"    ' ÷ display -> / in formula
+        Case Else: formulaOp = sym
+    End Select
+
+    akCols = Array( _
+        "LU", "LW", "LZ", "MB", "ME", "MG", "MJ", "ML", _
+        "MQ", "MS", "MV", "MX", "NA", "NC", "NF", "NH", _
+        "NL", "NN", "NQ", "NS", "NW", "NX", "OA", "OC")
+
+    Dim ops As String
+    ops = "+-*/"   ' characters to split on when parsing existing formula
+
+    For i = LBound(akCols) To UBound(akCols)
+        For j = 13 To 32
+            Set cell = ws.Range(akCols(i) & j)
+
+            If cell.HasFormula Then
+                ' Strip the leading "=" to get e.g. "AV3*AV4"
+                formula = Mid(cell.formula, 2)
+
+                ' Find the operator character in the formula
+                ' Walk through and find +, -, *, / that isn't part of a cell ref
+                Dim k       As Long
+                Dim opPos   As Long
+                Dim ch      As String
+                opPos = 0
+
+                For k = 2 To Len(formula)   ' start at 2 to skip any leading minus on first ref
+                    ch = Mid(formula, k, 1)
+                    If ch = "+" Or ch = "-" Or ch = "*" Or ch = "/" Then
+                        ' Make sure it's not inside a row number (digits only around it)
+                        ' A real operator will have a letter before it (end of cell ref like AV3)
+                        If k > 1 Then
+                            If Mid(formula, k - 1, 1) Like "[0-9]" Then
+                                opPos = k
+                                Exit For
+                            End If
+                        End If
+                    End If
+                Next k
+
+                If opPos > 0 Then
+                    ' Rebuild formula: everything before operator + new op + everything after
+                    cell.formula = "=" & Left(formula, opPos - 1) & formulaOp & Mid(formula, opPos + 1)
+                End If
+
+            End If
+        Next j
+    Next i
+
+    Application.ScreenUpdating = True
+    MsgBox "Operator set to """ & sym & """ across all cells.", vbInformation, "Done"
+
+End Sub
+
+' -------------------------------------------------------
+'  Assign each of these to a button on your sheet
+' -------------------------------------------------------
+
+Public Sub UseAddition()
+    ApplyOperator "+"
+End Sub
+
+Public Sub UseSubtraction()
+    ApplyOperator "-"
+End Sub
+
+Public Sub UseMultiplication()
+    ApplyOperator "x"
+End Sub
+
+Public Sub UseDivision()
+    ApplyOperator "/"
+End Sub
+
