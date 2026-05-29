@@ -1,0 +1,19 @@
+Public Sub SetZeroMargins()
+
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+
+    With ws.PageSetup
+        .TopMargin = Application.InchesToPoints(0)
+        .BottomMargin = Application.InchesToPoints(0)
+        .LeftMargin = Application.InchesToPoints(0)
+        .RightMargin = Application.InchesToPoints(0)
+        .HeaderMargin = Application.InchesToPoints(0)
+        .FooterMargin = Application.InchesToPoints(0)
+    End With
+
+    MsgBox "All margins set to 0.", vbInformation, "Done"
+
+End Sub
+
+
