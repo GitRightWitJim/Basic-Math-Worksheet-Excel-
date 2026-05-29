@@ -1,0 +1,109 @@
+Option Explicit
+
+Public Sub ChangeNumbers()
+    Dim lowVal As Variant, highVal As Variant
+    Dim rowPairs As Variant
+    Dim pagesCols As Variant
+    Dim ws As Worksheet
+    
+    '<<< Change this if your problems are on a specific sheet >>>
+    Set ws = ActiveSheet
+    
+    lowVal = Application.InputBox( _
+        Prompt:="Enter the LOW number", _
+        Title:="Level Change Mode", _
+        Type:=1 _
+    )
+    If lowVal = False Then Exit Sub
+    
+    highVal = Application.InputBox( _
+        Prompt:="Enter the HIGH number", _
+        Title:="Level Change Mode", _
+        Type:=1 _
+    )
+    If highVal = False Then Exit Sub
+    
+    If CLng(highVal) < CLng(lowVal) Then
+        MsgBox "High must be greater than or equal to Low.", vbExclamation
+        Exit Sub
+    End If
+    
+    'Row pairs for each problem-row (8 tall)
+    rowPairs = Array( _
+        Array(3, 4), _
+        Array(7, 8), _
+        Array(11, 12), _
+        Array(15, 16), _
+        Array(19, 20), _
+        Array(23, 24), _
+        Array(27, 28), _
+        Array(31, 32) _
+    )
+    
+    'Page -> 5 column letters (UPDATED mapping: new pages 1-12 correspond to old pages 2-13)
+    pagesCols = GetPageColumns_Shifted()
+    
+    Dim pageNum As Long, r As Long, c As Long
+    Dim topRow As Long, botRow As Long
+    Dim colLetter As String
+    
+    Application.ScreenUpdating = False
+    
+    For pageNum = 1 To 12
+        For r = LBound(rowPairs) To UBound(rowPairs)
+            topRow = rowPairs(r)(0)
+            botRow = rowPairs(r)(1)
+            
+            For c = 0 To 4 '0-based inside the Array("AV","AZ",...)
+                colLetter = pagesCols(pageNum)(c)
+                
+                ws.Range(colLetter & topRow).formula = "=RANDBETWEEN(" & lowVal & "," & highVal & ")"
+                ws.Range(colLetter & botRow).formula = "=RANDBETWEEN(" & lowVal & "," & highVal & ")"
+            Next c
+        Next r
+    Next pageNum
+    
+    Application.ScreenUpdating = True
+    
+    'Force recalculation so new randoms appear immediately
+    Application.Calculate
+    
+    MsgBox "Done! All pages include number within the range of (" & lowVal & " - " & highVal & ").", vbInformation
+End Sub
+
+Private Function GetPageColumns_Shifted() As Variant
+    'NEW Page 1-12 are OLD Page 2-13.
+    Dim pages(1 To 12) As Variant
+    
+    'Old Page 2 -> New Page 1
+    pages(1) = Array("AV", "AZ", "BD", "BH", "BL")
+    'Old Page 3 -> New Page 2
+    pages(2) = Array("BR", "BV", "BZ", "CD", "CH")
+    'Old Page 4 -> New Page 3
+    pages(3) = Array("CN", "CR", "CV", "CZ", "DD")
+    'Old Page 5 -> New Page 4
+    pages(4) = Array("DJ", "DN", "DR", "DV", "DZ")
+    'Old Page 6 -> New Page 5
+    pages(5) = Array("EF", "EJ", "EN", "ER", "EV")
+    'Old Page 7 -> New Page 6
+    pages(6) = Array("FB", "FF", "FJ", "FN", "FR")
+    'Old Page 8 -> New Page 7
+    pages(7) = Array("FX", "GB", "GF", "GJ", "GN")
+    'Old Page 9 -> New Page 8
+    pages(8) = Array("GT", "GX", "HB", "HF", "HJ")
+    'Old Page 10 -> New Page 9
+    pages(9) = Array("HP", "HT", "HX", "IB", "IF")
+    'Old Page 11 -> New Page 10
+    pages(10) = Array("IL", "IP", "IT", "IX", "JB")
+    'Old Page 12 -> New Page 11
+    pages(11) = Array("JH", "JL", "JP", "JT", "JX")
+    'Old Page 13 -> New Page 12 (continued +4 spacing)
+    pages(12) = Array("KD", "KH", "KL", "KP", "KT")
+    
+    GetPageColumns_Shifted = pages
+End Function
+
+
+
+
+
